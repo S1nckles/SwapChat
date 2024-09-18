@@ -1,8 +1,8 @@
 import { Route, Routes } from '../node_modules/react-router-dom/dist/index';
 import './global.css'
 import Home from './_root/pages/Home';
-import SigninForm from "./_auth/forms/SinginForm";
-import SignupForm from "./_auth/forms/SinginForm";
+import SigninForm from "./_auth/forms/SigninForm";
+import SignupForm from "./_auth/forms/SignupForm";
 import AuthLayout from './_auth/AuthLayout';
 import RootLayout from './_root/RootLayout';
 
@@ -12,8 +12,8 @@ const App = () => {
       {/* Public Routes */}
       <Routes>
         <Route element={<AuthLayout />}>
-          <Route path="/sig-in" element={<SigninForm />}/>
-          <Route path="/sig-up" element={<SignupForm />}/>
+          <Route path="/sign-in" element={<SigninForm />} />
+          <Route path="/sign-up" element={<SignupForm />} />
         </Route>
       </Routes>
 
