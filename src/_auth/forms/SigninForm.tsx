@@ -1,40 +1,64 @@
 import * as z from "zod";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { useToast } from "@/hooks/use-toast"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SignupValidation } from "@/lib/validation/index";
+import { SigninValidation as SigninValidation } from "@/lib/validation/index";
 import { Loader } from "../../components/shared/Loader";
+import { useSignInAccount } from "@/lib/react-query/queriesAndMutations";
+import { useUserContext } from "@/context/AuthContext";
 
+const SigninForm = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { checkAuthUser, isLoading: isUserLoading } = useUserContext();
 
-const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-})
+  const { mutateAsync: signInAccount, isPending: isSigningIn } = useSignInAccount();
 
-export default function SinginForm() {
-  const isLoading = false;
-
-
-  const form = useForm<z.infer<typeof SignupValidation>>({
-    resolver: zodResolver(SignupValidation),
+  const form = useForm<z.infer<typeof SigninValidation>>({
+    resolver: zodResolver(SigninValidation),
     defaultValues: {
-      name: "",
-      username: "",
       email: "",
       password: "",
     },
-  }); 
+  });
 
-  // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values)
+  async function onSubmit(values: z.infer<typeof SigninValidation>) {
+    try {
+      // Логування спроби авторизації
+      console.log('Attempting to create session with:', values.email, values.password);
+
+      const session = await signInAccount({
+        email: values.email,
+        password: values.password,
+      });
+
+      console.log('Session created:', session); // Логування сесії
+
+      if (!session) {
+        return toast({ title: "Sign in failed. Please try again." });
+      }
+
+      const isLoggedIn = await checkAuthUser();
+
+      console.log('Is Logged In:', isLoggedIn); // Логування результату перевірки
+
+      if (isLoggedIn) {
+        console.log('Redirecting to home page...');
+
+        form.reset();
+        navigate('/'); // Редирект на головну сторінку
+      } else {
+        toast({ title: "Sign in failed. Please try again." });
+      }
+    } catch (error) {
+      console.error("Error in onSubmit:", error); // Логування помилки
+      toast({ title: "An error occurred. Please try again." });
+    }
   }
 
   return (
@@ -43,14 +67,14 @@ export default function SinginForm() {
         <img src="/assets/images/logo.svg" alt="logo" />
 
         <h2 className="h3-bold md:h2-bold pt-5 sm:pt-12">
-        Sign in to your account
+          Log in to your account
         </h2>
         <p className="text-light-3 small-medium md:base-regular mt-2">
-          Please enter your e-mail and password
+          Welcome back! Please enter your details
         </p>
 
         <form
-          onSubmit={form.handleSubmit()}
+          onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-5 w-full mt-4">
           <FormField
             control={form.control}
@@ -63,7 +87,8 @@ export default function SinginForm() {
                 </FormControl>
                 <FormMessage />
               </FormItem>
-            )} />
+            )}
+          />
 
           <FormField
             control={form.control}
@@ -76,27 +101,29 @@ export default function SinginForm() {
                 </FormControl>
                 <FormMessage />
               </FormItem>
-            )} />
+            )}
+          />
 
           <Button type="submit" className="shad-button_primary">
-            {isLoading
-              ? (<div className="flex-center gap-2">
-                <Loader />Loading...
+            {isUserLoading 
+            ? (<div className="flex-center gap-2">
+              <Loader />Loading...
               </div>)
-              : ('Sign Up')}
+            : ('Sign in')}
           </Button>
 
           <p className="text-small-regular text-light-2 text-center mt-2">
-            Still don't have an account?
+            Don't have an account?
             <Link
               to="/sign-up"
               className="text-primary-500 text-small-semibold ml-1">
-              Log up
+              Sign up
             </Link>
           </p>
         </form>
       </div>
     </Form>
-  )
-  
-}
+  );
+};
+
+export default SigninForm;
