@@ -1,11 +1,11 @@
 import React from 'react';
 
-const Leftbar = () => {
+const Explore = () => {
     return (
         <div>
-            LEftBar
+            Explore
         </div>
     );
 };
 
-export default Leftbar;
+export default Explore;
