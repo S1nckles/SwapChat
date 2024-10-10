@@ -1,7 +1,8 @@
-import { INewUser } from "@/types/index";
-import { ID } from "appwrite";
+import { ID, Query } from "appwrite";
+
+import { INewPost, INewUser } from "@/types/index";
 import { SigninValidation } from "../validation/index";
-import { account, appwriteConfig, avatars, databases} from "./config";
+import { account, appwriteConfig, avatars, databases, storage} from "./config";
 
 export async function CreateUserAccount(user: INewUser) {
     try {
@@ -95,5 +96,105 @@ export async function signOutAccount() {
   } catch (error) {
     console.log(error);
     
+  }
+} 
+
+export async function createPost(post: INewPost) {
+  try {
+    // Завантаження файлу
+    const uploadedFile = await uploadFile(post.file[0]);
+    if (!uploadedFile) {
+      throw new Error('File upload failed');
+    }
+
+    const fileUrl = getFilePreview(uploadedFile.$id);
+    if (!fileUrl) {
+      await deleteFile(uploadedFile.$id); // Видалення файлу у випадку помилки
+      throw new Error('Failed to generate file URL');
+    }
+
+    const tags = post.tags ? post.tags.replace(/ /g, '').split(',') : [];
+
+    const newPost = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      ID.unique(),
+      {
+        creator: post.userId,
+        caption: post.caption,
+        imageUrl: fileUrl,
+        imageId: uploadedFile.$id,
+        location: post.location,
+        tags: tags
+      }
+    );
+
+    if (!newPost) {
+      await deleteFile(uploadedFile.$id);
+      throw new Error('Failed to create post');
+    }
+
+    return newPost;
+  } catch (error) {
+    console.error('Error creating post:', error);
+  }
+}
+
+
+export async function uploadFile(file: File) {
+  try {
+    const uploadedFile = await storage.createFile(
+      appwriteConfig.storageId,
+      ID.unique(),
+      file
+    );
+
+    return uploadedFile;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export function getFilePreview(fileId: string) {
+  try {
+    const fileUrl = storage.getFilePreview(
+      appwriteConfig.storageId,
+      fileId,
+      2000,
+      2000,
+      "top",
+      100
+    );
+
+    if (!fileUrl) throw Error;
+
+    return fileUrl;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function deleteFile(fileId: string) {
+  try {
+    await storage.deleteFile(appwriteConfig.storageId, fileId)
+    return {status: 'ok'}
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function getRecentPosts() {
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      [Query.orderDesc("$createdAt"), Query.limit(20)]
+    );
+
+    if (!posts) throw Error;
+
+    return posts;
+  } catch (error) {
+    console.log(error);
   }
 }
