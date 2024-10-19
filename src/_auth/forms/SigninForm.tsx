@@ -29,15 +29,10 @@ const SigninForm = () => {
 
   async function onSubmit(values: z.infer<typeof SigninValidation>) {
     try {
-      // Логування спроби авторизації
-      console.log('Attempting to create session with:', values.email, values.password);
-
       const session = await signInAccount({
         email: values.email,
         password: values.password,
       });
-
-      console.log('Session created:', session); // Логування сесії
 
       if (!session) {
         return toast({ title: "Sign in failed. Please try again." });
@@ -45,18 +40,13 @@ const SigninForm = () => {
 
       const isLoggedIn = await checkAuthUser();
 
-      console.log('Is Logged In:', isLoggedIn); // Логування результату перевірки
-
       if (isLoggedIn) {
-        console.log('Redirecting to home page...');
-
         form.reset();
-        navigate('/'); // Редирект на головну сторінку
+        navigate('/');
       } else {
         toast({ title: "Sign in failed. Please try again." });
       }
     } catch (error) {
-      console.error("Error in onSubmit:", error); // Логування помилки
       toast({ title: "An error occurred. Please try again." });
     }
   }
