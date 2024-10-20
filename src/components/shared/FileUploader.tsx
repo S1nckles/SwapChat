@@ -10,7 +10,7 @@ type FileUploaderProps = {
 
 const FileUploader = ({fieldChange, mediaUrl}: FileUploaderProps) => {
     const [file, setFile] = useState<File[]>([]);
-    const [fileUrl, setFileUrl] = useState('');
+    const [fileUrl, setFileUrl] = useState(mediaUrl);
 
     const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
         setFile(acceptedFiles);
@@ -29,12 +29,13 @@ const FileUploader = ({fieldChange, mediaUrl}: FileUploaderProps) => {
             {
                 fileUrl ? (
                     
-                    <div className="flex flex-1 justify-center w-full p-5 lg:p-10">
+                    <div className="flex flex-col flex-1 justify-center w-full p-5 lg:p-10">
                         <img 
                             src={fileUrl} 
                             alt="image" 
                             className="file_uploader-img"
                         />
+                        <p className="flex justify-center text-light-4 small-regular p-4">Drag photo here</p>
                     </div>
                 ): (
                     <div className="file_uploader-box">
