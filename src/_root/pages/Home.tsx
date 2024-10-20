@@ -1,10 +1,12 @@
 import { Models } from "appwrite";
 import { Loader } from "@/components/shared/Loader";
 import { useGetRecentPosts } from "@/lib/react-query/queriesAndMutations";
+import PostCard from "@/components/shared/PostCard";
 
 const Home = () => {
     const { data: posts, isPending: isPostLoading, isError: isErrorPost } = useGetRecentPosts();
 
+    
     return (
         <div className="flex flex-1">
             <div className="home-container">
@@ -12,10 +14,10 @@ const Home = () => {
                     <h2 className="h3-bold md:h2-bold text-left w-full">Home Feed</h2>
                     {isPostLoading && !posts ? (
                         <Loader />
-                    ) : (
-                        <ul className="flex flex-col flex-1 gap-9 w-full">
+                        ) : (
+                            <ul className="flex flex-col flex-1 gap-9 w-full">
                             {posts?.documents.map((post: Models.Document) => (
-                                <li key={post.$id}>{post.caption}</li>
+                                <PostCard post={post} key={post.caption} />
                             ))}
                         </ul>
                     )}
